@@ -51,7 +51,6 @@ client.messageBuilder()
           .formatLine("format line").lineBreak()
           .formatBlock("format block").lineBreak()
           .url("Link description", "Link url").lineBreak()
-          .text("Увидимся скоро \uD83D\uDE18\uD83D\uDE18\uD83D\uDE18\uD83D\uDE18")
       .end()
       .disableNotification()
       .send();
