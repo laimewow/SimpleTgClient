@@ -2,6 +2,7 @@ package com.laimewow.stgc.client.message;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Future;
 
 public class MessageBuilder {
 
@@ -25,12 +26,12 @@ public class MessageBuilder {
         return this;
     }
 
-    public MessageBuilder addImage(byte[] image) {
-        if (image != null) {
-            images.add(image);
-        }
-        return this;
-    }
+//    public MessageBuilder addImage(byte[] image) {
+//        if (image != null) {
+//            images.add(image);
+//        }
+//        return this;
+//    }
 
     public MessageBuilder disableNotification() {
         silent = true;
@@ -53,7 +54,7 @@ public class MessageBuilder {
     }
 
 
-    public String send() {
+    public Future<String> send() {
         return client.sendMessage(this);
     }
 

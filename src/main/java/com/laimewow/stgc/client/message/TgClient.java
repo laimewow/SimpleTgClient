@@ -5,8 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.laimewow.stgc.client.config.TgClientConfiguration;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -17,8 +15,10 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-
-@Slf4j
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 
 public class TgClient {
 
@@ -27,14 +27,13 @@ public class TgClient {
     private final String connectionString;
 
     private final ObjectMapper objectMapper;
+    private ExecutorService executorService = Executors.newSingleThreadExecutor(p -> new Thread(p, "TgClientExecutor"));
 
 
     public TgClient(TgClientConfiguration configuration, ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-        log.info("Simple tg client loaded with config: {}", configuration);
         this.configuration = configuration;
         connectionString = String.format("https://api.telegram.org/bot%s/sendMessage", configuration.getToken());
-
     }
 
     public MessageBuilder messageBuilder() {
@@ -42,7 +41,16 @@ public class TgClient {
     }
 
     @SneakyThrows
-    String sendMessage(@NotNull MessageBuilder messageBuilder) {
+    Future<String> sendMessage(@NotNull MessageBuilder messageBuilder) {
+        if (!configuration.isAsync()) {
+            return new FutureTask<>(() -> _sendMessage(messageBuilder));
+        }
+        else {
+            return executorService.submit(() -> _sendMessage(messageBuilder));
+        }
+    }
+
+    private String _sendMessage(MessageBuilder messageBuilder) {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String json = objectMapper.writeValueAsString(messageBuilder.toMessageStruct());
@@ -54,6 +62,8 @@ public class TgClient {
             InputStream content = response.getEntity().getContent();
             JsonNode jsonNode = objectMapper.readTree(content);
             return jsonNode.get("result").get("message_id").asText();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
