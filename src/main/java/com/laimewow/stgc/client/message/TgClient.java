@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.laimewow.stgc.client.config.TgClientConfiguration;
 import lombok.Getter;
 import lombok.SneakyThrows;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -18,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.FutureTask;
 
 public class TgClient {
 
@@ -41,16 +41,12 @@ public class TgClient {
     }
 
     @SneakyThrows
-    Future<String> sendMessage(@NotNull MessageBuilder messageBuilder) {
-        if (!configuration.isAsync()) {
-            return new FutureTask<>(() -> _sendMessage(messageBuilder));
-        }
-        else {
-            return executorService.submit(() -> _sendMessage(messageBuilder));
-        }
+    Future<String> sendAsync(@NotNull MessageBuilder messageBuilder) {
+        return executorService.submit(() -> _sendMessage(messageBuilder));
     }
 
     private String _sendMessage(MessageBuilder messageBuilder) {
+        String responseString = "";
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
             String json = objectMapper.writeValueAsString(messageBuilder.toMessageStruct());
@@ -60,11 +56,16 @@ public class TgClient {
             post.setHeader("Content-type", "application/json");
             CloseableHttpResponse response = httpClient.execute(post);
             InputStream content = response.getEntity().getContent();
+            IOUtils.toString(content, StandardCharsets.UTF_8);
             JsonNode jsonNode = objectMapper.readTree(content);
             return jsonNode.get("result").get("message_id").asText();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error sending message: " + responseString, e);
         }
+    }
+
+    String sendMessage(@NotNull MessageBuilder messageBuilder) {
+        return _sendMessage(messageBuilder);
     }
 
 }

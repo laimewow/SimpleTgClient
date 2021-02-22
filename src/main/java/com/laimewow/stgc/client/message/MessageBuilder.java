@@ -54,8 +54,12 @@ public class MessageBuilder {
     }
 
 
-    public Future<String> send() {
+    public String send() {
         return client.sendMessage(this);
+    }
+
+    public Future<String> sendAsync() {
+        return client.sendAsync(this);
     }
 
     public void toChat(String chatId) {

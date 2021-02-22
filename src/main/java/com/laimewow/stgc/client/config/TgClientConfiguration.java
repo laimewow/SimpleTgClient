@@ -10,5 +10,4 @@ import lombok.ToString;
 public class TgClientConfiguration {
     private String token;
     private String chatId;
-    private boolean isAsync = false;
 }
