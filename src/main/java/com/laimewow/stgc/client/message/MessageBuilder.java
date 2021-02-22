@@ -1,6 +1,7 @@
 package com.laimewow.stgc.client.message;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Future;
 
@@ -77,9 +78,31 @@ public class MessageBuilder {
 
         private StringBuilder buffer = new StringBuilder();
 
+        private final List<Character> escaped = Arrays.asList('_', '*', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!');
+
         private void processText(String escape, String text) {
+            text = escape(text);
             text = text.replace(escape, "\\" + escape);
             buffer.append(escape).append(text).append(escape);
+        }
+
+        private String escape(String in) {
+            StringBuilder sb = new StringBuilder();
+            char[] chars = in.toCharArray();
+            for (char aChar : chars) {
+                boolean append = false;
+                if (aChar >= 1 && aChar <= 126) {
+                    append = true;
+                }
+                else if (escaped.contains(aChar)) {
+                    append = true;
+                }
+                if (append) {
+                    sb.append('\\');
+                }
+                sb.append(aChar);
+            }
+            return sb.toString();
         }
 
         public MarkdownSupport lineBreak() {
