@@ -136,6 +136,7 @@ public class MessageBuilder {
         }
 
         public MarkdownSupport formatBlock(String text) {
+            text = escape(text);
             buffer.append("```").append("\n").append(text).append("\n").append("```");
             return this;
         }
@@ -152,6 +153,7 @@ public class MessageBuilder {
         }
 
         public MarkdownSupport text(String text) {
+            text = escape(text);
             buffer.append(text);
             return this;
         }
