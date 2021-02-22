@@ -57,7 +57,7 @@ public class TgClient {
             CloseableHttpResponse response = httpClient.execute(post);
             InputStream content = response.getEntity().getContent();
             responseString = IOUtils.toString(content, StandardCharsets.UTF_8);
-            JsonNode jsonNode = objectMapper.readTree(content);
+            JsonNode jsonNode = objectMapper.readTree(responseString);
             return jsonNode.get("result").get("message_id").asText();
         } catch (Exception e) {
             throw new RuntimeException("Error sending message: " + responseString, e);
